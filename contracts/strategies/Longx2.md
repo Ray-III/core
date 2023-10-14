@@ -16,11 +16,22 @@ Instructions
 
 #### Instructions:
 
-- check_postion_status
-- get_borrow_amount()
-- repay_borrow(borrow_amount)
-- redeem_xtz()
+- check_postion_status(position_id)
+- get_borrow_amount(position_id)
+- repay_borrow(position_id, borrow_amount)
+- redeem_xtz(position_id)
 - swap_xtz_for_usdt()
-- get_refund_reserve_amount()
-- refund_reserve()
+- get_refund_reserve_amount(position_id)
+- refund_reserve(position_id)
 - transfert_profit_to_user()
+
+
+### Liquidate position
+
+- check_liquidation_requirements(position_id)
+- check_postion_status(position_id)
+- get_borrow_amount(position_id)
+- repay_borrow(position_id, borrow_amount)
+- redeem_xtz(position_id)
+- swap_xtz_for_usdt()
+- transfert_remaning_usdt_to_reserve(position_id) [ refun amount + fees]
