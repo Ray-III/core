@@ -1,1 +1,8 @@
 # Bull Finance
+
+### Deployments
+
+Permit: KT1XMTxQJNaSHLPChYeDU2h4HqUBCPkW8jQP
+USDT: KT1APQEuFQN1rmYzV97oHZdRdS9Xmtx2QkEK
+Pool: KT1LjXyZzQC2C7yn7TK9eJSjLXTuetpsnygX
+LP: KT1QfvN7rasfydNrV4FPHuUHrmw5XovdfGY6

@@ -1,0 +1,17 @@
+archetype oracle
+
+asset prices identified by price_ticker {
+    price_ticker: string;
+    price_price: nat;
+} initialized with {
+    {"BTC-USD"; 0};
+    {"XTZ-USD"; 0}
+}
+
+entry set_price(ticker: string, price_12: nat) {
+    prices.update(ticker, {price_price := price_12})
+}
+
+view getPrice(ticker: string): nat {
+    return prices[ticker].price_price
+}
