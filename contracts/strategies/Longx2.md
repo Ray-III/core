@@ -35,3 +35,9 @@ Instructions
 - redeem_xtz(position_id)
 - swap_xtz_for_usdt()
 - transfert_remaning_usdt_to_reserve(position_id) [ refun amount + fees]
+
+## Roadmap improvements:
+- Add more levrage possibilities
+- Add new levrage assets
+- partial liquidation
+- allow side party liquidators
