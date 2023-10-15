@@ -1,10 +1,6 @@
 {
     "symbol": "USDT",
-    "name": "Tether USD",
+    "name": "Bull Tether USD",
     "decimals": 12,
-    "description": "",
-    "thumbnailUri": "https://hodooi.mypinata.cloud/ipfs/QmVt7VshRvFbar5nPzJSCiYBkH28iVEiy2YVtrSxkyTgHX",
-    "isTransferable": true,
-    "isBooleanAmount": false,
-    "shouldPreferSymbol": true
+    "thumbnailUri": "https://cryptologos.cc/logos/tether-usdt-logo.png"
 }

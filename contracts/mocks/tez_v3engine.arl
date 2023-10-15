@@ -56,3 +56,9 @@ entry set_oracle(new_oracle: address) {
 entry set_uusd(new_uusd: address) {
     uusd_address := new_uusd
 }
+
+view get_tokens(collat_amount: nat): nat {
+    var price ?= oracle(oracle_address).getPrice(("XTZ-USD"));
+    var amount ?= int_to_nat(floor((price*collat_amount)/(LTV*DECIMALS)));
+    return amount
+}

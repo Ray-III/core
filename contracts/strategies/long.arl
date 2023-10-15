@@ -1,0 +1,33 @@
+archetype long(usdt: address, reserve: address, engine: address)
+
+import "../interfaces/fa2.arl"
+import "../pool.arl"
+import "../mocks/tez_v3engine.arl"
+import quipuswap from "../mocks/swap.tz"
+
+constant QUIPUSWAP: address = KT1NrEZaZon4adSdXJTZJRfMfAgFBHLTpigq
+constant XTZ_USDT: nat = 0
+constant UUSD_USDT: nat = 0
+constant DECIMALS: nat = 1_000_000_000_000
+constant COLLATERAL_RATIO: nat = 160
+constant LTV: nat = 625
+
+entry init() {
+    transfer 0tz to entry tez_v3engine(engine).create_vault((caller, caller))
+}
+
+entry continue_entry(usdt_balance: nat) {
+    transfer 0tz to entry fa2_multi(usdt).%transfer([(self_address, [(reserve, 0, usdt_balance)])])
+}
+ 
+entry open_position(amount_tokens: nat) {
+    transfer 0tz to entry fa2_multi(usdt).%transfer([(caller, [(self_address, 0, amount_tokens)])]);
+    transfer 0tz to entry pool(reserve).utilize((amount_tokens));
+    transfer 0tz to entry fa2_multi(usdt).update_operators(([fa2_multi::add_operator({self_address; QUIPUSWAP; 0})]));
+    transfer 0tz to entry quipuswap(QUIPUSWAP).swap((none<lambda<unit, list<operation>>>, [(quipuswap::A_to_b, XTZ_USDT)], now+1h, self_address, self_address, amount_tokens, 0, none<nat>));
+    var price ?= oracle(oracle_address).getPrice(("XTZ-USD"));
+    var uusd_to_borrow = tez_v3engine(engine).get_tokens(amount_tokens);
+    transfer (amount_tokens/1_000_000*1utz) to entry tez_v3engine(engine).mint((uusd_to_borrow));
+    transfer 0tz to entry quipuswap(QUIPUSWAP).swap((none<lambda<unit, list<operation>>>, [(quipuswap::A_to_b, UUSD_USDT)], now+1h, self_address, self_address, uusd_to_borrow, 0, none<nat>));
+    transfer 0tz to usdt call balance_of
+}

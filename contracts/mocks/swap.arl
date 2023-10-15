@@ -1,0 +1,14 @@
+archetype swap
+
+constant QUIPUSWAP: address = KT1NrEZaZon4adSdXJTZJRfMfAgFBHLTpigq
+constant PAIR_ID: nat = 0
+
+enum swap_direction_t =
+| A_to_b
+| B_to_a
+
+import quipuswap from "./swap.tz"
+
+entry swap(amount: nat) {
+    transfer 0tz to entry quipuswap(QUIPUSWAP).swap((none<lambda<unit, list<operation>>>, [(A_to_b, PAIR_ID)], now+1h, self_address, self_address, amount, 0, none<nat>)) 
+}
