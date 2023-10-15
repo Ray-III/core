@@ -1,5 +1,7 @@
 # Bull Finance
 
+Front Repo: [https://github.com/bulltez-finance/ui](https://github.com/bulltez-finance/ui)
+
 ## Strategies implemented
 
 ### Long x2 Strategy
