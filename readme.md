@@ -1,6 +1,6 @@
 # Bull Finance
 
-Front Repo: [https://github.com/bulltez-finance/ui](https://github.com/bulltez-finance/ui)
+Front Repo: [https://github.com/bulltez-finance/ui/tree/app/ray3](https://github.com/bulltez-finance/ui/tree/app/ray3)
 
 ## Strategies implemented
 
