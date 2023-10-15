@@ -17,8 +17,8 @@ Instructions
 #### Instructions:
 
 - check_postion_status(position_id)
-- get_borrow_amount(position_id)
-- repay_borrow(position_id, borrow_amount)
+- get_uusd_amount_borrowed(position_id) [inclu: borrow + interest]
+- repay_uust_borrowed(position_id, borrow_amount)
 - redeem_xtz(position_id)
 - swap_xtz_for_usdt()
 - get_refund_reserve_amount(position_id)
