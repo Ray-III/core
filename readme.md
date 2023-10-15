@@ -5,6 +5,10 @@
 ### Long x2 Strategy
 <img src="illustrations/Long_implemented_strategy.png" alt="Long x2 Strategy"/>
 
+## Compare to the current user strategy to beat Long x2
+
+<img src="illustrations/Current_user_strategy.png" alt="Long x2 Strategy"/>
+
 ### Short x2 Strategy
 <img src="illustrations/Short_implemented_startegy.png" alt="Short x2 Strategy"/>
 
