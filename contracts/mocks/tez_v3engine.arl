@@ -1,4 +1,4 @@
-archetype tez_v3engine(init_oracle: address, init_uusd: address)
+archetype tez_v3engine(oracle_address: address, uusd_address: address)
 
 import "./oracle.arl"
 import "../interfaces/fa2.arl"
@@ -12,9 +12,6 @@ asset positions identified by user {
     position_tez: nat;
     position_uusd: nat;
 }
-
-variable oracle_address: address = init_oracle
-variable uusd_address: address = init_uusd
 
 entry create_vault(baker: address, introducer: address) {
     positions.add({user= caller; position_tez=0; position_uusd=0})
@@ -40,21 +37,14 @@ entry burn(token_amount: nat) {
 
 entry liquidate(token_amount: nat, vault_owner: address) {
     var price ?= oracle(oracle_address).getPrice(("XTZ-USD"));
-    var is_liquidable: bool = (positions[vault_owner].position_tez*price*LTV)/1000 <= (positions[vault_owner].position_uusd*COLLATERAL_RATIO)/100;
+    var tez_bag ?= positions[vault_owner];
+    var is_liquidable: bool = (tez_bag.position_tez*price*LTV)/1000 <= (positions[vault_owner].position_uusd*COLLATERAL_RATIO)/100;
     do_require(is_liquidable, "NOT_LIQUIDABLE");
-    var tez_transfer = token_amount * 1.125 * DECIMALS / price;
+    var tez_transfer ?= int_to_nat(floor(token_amount * 1.125 * DECIMALS / price));
     positions.update(vault_owner, {position_uusd-=token_amount;position_tez-=tez_transfer});
     transfer 0tz to entry fa2_multi(uusd_address).%transfer([(caller, [(self_address, 0, token_amount)])]);
     transfer 0tz to entry fa2_multi(uusd_address).burn((0, token_amount));
     transfer (tez_transfer/1_000_000 * 1utz) to caller
-}
-
-entry set_oracle(new_oracle: address) {
-    oracle_address := new_oracle
-}
-
-entry set_uusd(new_uusd: address) {
-    uusd_address := new_uusd
 }
 
 view get_tokens(collat_amount: nat): nat {

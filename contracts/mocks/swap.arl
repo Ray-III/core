@@ -1,14 +1,28 @@
-archetype swap
+archetype swap(usdt: address, uusd: address, oracle_address: address)
 
-constant QUIPUSWAP: address = KT1NrEZaZon4adSdXJTZJRfMfAgFBHLTpigq
-constant PAIR_ID: nat = 0
+import "../interfaces/fa2.arl"
+import "./oracle.arl"
 
-enum swap_direction_t =
-| A_to_b
-| B_to_a
+constant DECIMALS: nat = 1_000_000_000_000
+enum swap_side = |left_right|right_left
 
-import quipuswap from "./swap.tz"
+entry swap_usdt_uusd(side: swap_side, amount: nat) {
+    if side = left_right then begin
+        transfer 0tz to entry fa2_multi(usdt).%transfer(([(caller, [(self_address, 0, amount)])]));
+        transfer 0tz to entry fa2_multi(uusd).%transfer(([(self_address, [(caller, 0, amount)])]))
+    end else begin
+        transfer 0tz to entry fa2_multi(uusd).%transfer(([(caller, [(self_address, 0, amount)])]));
+        transfer 0tz to entry fa2_multi(usdt).%transfer(([(self_address, [(caller, 0, amount)])]))
+    end
+}
 
-entry swap(amount: nat) {
-    transfer 0tz to entry quipuswap(QUIPUSWAP).swap((none<lambda<unit, list<operation>>>, [(A_to_b, PAIR_ID)], now+1h, self_address, self_address, amount, 0, none<nat>)) 
+entry swap_usdt_xtz(side: swap_side, amount: nat) {
+    var price ?= oracle(oracle_address).getPrice("XTZ-USD");
+    if side = left_right then begin
+        transfer 0tz to entry fa2_multi(usdt).%transfer(([(caller, [(self_address, 0, amount)])]));
+        transfer (price*amount/(DECIMALS*1_000_000)*1utz) to caller
+    end else begin
+        var computed_amount ?= int_to_nat(floor(price*mutez_to_nat(transferred)*1_000_000/(DECIMALS)));
+        transfer 0tz to entry fa2_multi(usdt).%transfer(([(self_address, [(caller, 0, (computed_amount))])]))
+    end
 }

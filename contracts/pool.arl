@@ -9,6 +9,8 @@ variable lp_supply: nat = 0
 variable pending_amount: nat = 0
 variable pending_caller: address = DEFAULT_ADDRESS
 
+variable strategies: set<address> = make_set<address>([])
+
 entry set_lp(lp: address) {
     called by owner
     effect {
@@ -55,4 +57,16 @@ entry withdraw(amount: nat) {
     pending_amount := amount;
     pending_caller := caller;
     transfer 0tz to token call balance_of<(list<(address * nat)> * contract<(nat)>)>(([(self_address, token_id)], self.continue_deposit))
+}
+
+entry utilize(amount: nat) {
+    do_require(strategies.contains(caller),"INVALID CALLER");
+    transfer 0tz to entry fa2_multi(token).%transfer(([(self_address, [(caller, token_id, amount)])]))
+}
+
+entry add_strat(new_strat: address) {
+    called by owner
+    effect {
+        strategies.add(new_strat);
+    }
 }
