@@ -1,5 +1,14 @@
 # Bull Finance
 
+## Strategies implemented
+
+### Long x2 Strategy
+<img src="illustrations/Long_implemented_strategy.png" alt="Long x2 Strategy"/>
+
+### Short x2 Strategy
+<img src="illustrations/Short_implemented_startegy.png" alt="Short x2 Strategy"/>
+
+
 ### Deployments
 
 Permit: KT1XMTxQJNaSHLPChYeDU2h4HqUBCPkW8jQP
