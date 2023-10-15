@@ -1,0 +1,72 @@
+archetype long(usdt: address, reserve: address, engine: address, uusd: address, uusd_id: nat, swap_address: address)
+
+import "../interfaces/fa2.arl"
+import "../mocks/swap.arl"
+import "../pool.arl"
+import "../mocks/tez_v3engine.arl"
+
+constant DEFAULT_ADDRESS: address = KT1VMCj69PwwKK7aRLRPnWoYh4X1xQqk2Vm2
+constant QUIPUSWAP: address = KT1NrEZaZon4adSdXJTZJRfMfAgFBHLTpigq
+constant XTZ_USDT: nat = 0
+constant UUSD_USDT: nat = 0
+constant DECIMALS: nat = 1_000_000_000_000
+constant COLLATERAL_RATIO: nat = 160
+constant LTV: nat = 625
+
+variable pending_closer: address = DEFAULT_ADDRESS
+
+enum t_side = | A_to_b | B_to_a
+
+asset initial_tokens identified by owner {
+    owner: address;
+    deposit: nat;
+    borrowed: nat;
+}
+
+// entry init() {
+//     transfer 0tz to entry tez_v3engine(engine).create_vault((caller, caller))
+// }
+
+// entry continue_deposit(usdt_balance: nat) {
+//     transfer 0tz to entry fa2_multi(usdt).%transfer([(self_address, [(reserve, 0, usdt_balance)])])
+// }
+ 
+entry open_position(amount_tokens: nat) {
+    // match initial_tokens[caller] with
+    // | some(init) -> initial_tokens.update(caller, {deposit+=amount_tokens})
+    // | none -> initial_tokens.add({owner=caller;deposit=amount_tokens;borrowed=0})
+    // end;
+    // transfer 0tz to entry fa2_multi(usdt).%transfer([(caller, [(self_address, 0, amount_tokens)])]);
+    // transfer 0tz to entry pool(reserve).utilize((amount_tokens));
+    // transfer 0tz to entry fa2_multi(usdt).update_operators(([fa2_multi::add_operator({self_address; QUIPUSWAP; 0})]));
+    // transfer 0tz to entry quipuswap(QUIPUSWAP).swap((none<lambda<unit, list<operation>>>, [(right<unit>(()), XTZ_USDT)], now+1h, self_address, self_address, amount_tokens, 0, none<nat>));
+    transfer 0tz to entry fa2_multi(usdt).update_operators(([fa2_multi::remove_operator({swap_address; swap_address; 0})]));
+    // transfer 0tz to entry swap(swap_address).swap_usdt_xtz((swap::left_right, amount_tokens));
+    // var uusd_to_borrow ?= tez_v3engine(engine).get_tokens(amount_tokens);
+    // transfer (amount_tokens/1_000_000*1utz) to entry tez_v3engine(engine).mint((uusd_to_borrow));
+    // transfer 0tz to entry fa2_multi(uusd).update_operators(([fa2_multi::add_operator({self_address; QUIPUSWAP; uusd_id})]));
+    // transfer 0tz to entry quipuswap(QUIPUSWAP).swap((none<lambda<unit, list<operation>>>, [(right<unit>(()), UUSD_USDT)], now+1h, self_address, self_address, uusd_to_borrow, 0, none<nat>));
+    // transfer 0tz to entry fa2_multi(uusd).update_operators(([fa2_multi::add_operator({self_address; swap_address; 0})]));
+    // transfer 0tz to entry swap(swap_address).swap_usdt_uusd((swap::right_left, uusd_to_borrow));
+    // transfer 0tz to usdt call balance_of<(list<(address * nat)> * contract<(nat)>)>(([(self_address, 0)], self.continue_deposit))
+}
+
+entry continue_close(usdt_balance: nat) {
+    transfer 0tz to entry fa2_multi(usdt).%transfer([(self_address, [(pending_closer, 0, usdt_balance)])]);
+    pending_closer := DEFAULT_ADDRESS
+}
+
+entry close_position() {
+    var amount_tokens = initial_tokens[caller].borrowed;
+    transfer 0tz to entry pool(reserve).utilize((amount_tokens));
+    transfer 0tz to entry fa2_multi(usdt).update_operators(([fa2_multi::add_operator({self_address; swap_address; 0})]));
+    transfer 0tz to entry swap(swap_address).swap_usdt_uusd((swap::left_right, amount_tokens));
+    transfer 0tz to entry fa2_multi(uusd).update_operators(([fa2_multi::add_operator({self_address; QUIPUSWAP; 0})]));
+    transfer 0tz to entry tez_v3engine(engine).burn((amount_tokens));
+    // transfer 0tz to entry quipuswap(QUIPUSWAP).swap((none<lambda<unit, list<operation>>>, [(right<unit>(()), XTZ_USDT)], now+1h, self_address, self_address, mutez_to_nat(balance)*1_000_000, 0, none<nat>));
+    transfer (mutez_to_nat(balance)*1_000_000*1utz) to entry swap(swap_address).swap_usdt_xtz((swap::right_left, 0));
+    transfer 0tz to entry fa2_multi(usdt).%transfer([(self_address, [(reserve, 0, initial_tokens[caller].deposit)])]);
+    initial_tokens.update(caller, {deposit=0;borrowed=0});
+    pending_closer := caller;
+    transfer 0tz to usdt call balance_of<(list<(address * nat)> * contract<(nat)>)>(([(self_address, 0)], self.continue_close))
+}

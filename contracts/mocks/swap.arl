@@ -1,0 +1,28 @@
+archetype swap(usdt: address, uusd: address, oracle_address: address)
+
+import "../interfaces/fa2.arl"
+import "./oracle.arl"
+
+constant DECIMALS: nat = 1_000_000_000_000
+enum swap_side = |left_right|right_left
+
+entry swap_usdt_uusd(side: swap_side, amount: nat) {
+    if side = left_right then begin
+        transfer 0tz to entry fa2_multi(usdt).%transfer(([(caller, [(self_address, 0, amount)])]));
+        transfer 0tz to entry fa2_multi(uusd).%transfer(([(self_address, [(caller, 0, amount)])]))
+    end else begin
+        transfer 0tz to entry fa2_multi(uusd).%transfer(([(caller, [(self_address, 0, amount)])]));
+        transfer 0tz to entry fa2_multi(usdt).%transfer(([(self_address, [(caller, 0, amount)])]))
+    end
+}
+
+entry swap_usdt_xtz(side: swap_side, amount: nat) {
+    var price ?= oracle(oracle_address).getPrice("XTZ-USD");
+    if side = left_right then begin
+        transfer 0tz to entry fa2_multi(usdt).%transfer(([(caller, [(self_address, 0, amount)])]));
+        transfer (price*amount/(DECIMALS*1_000_000)*1utz) to caller
+    end else begin
+        var computed_amount ?= int_to_nat(floor(price*mutez_to_nat(transferred)*1_000_000/(DECIMALS)));
+        transfer 0tz to entry fa2_multi(usdt).%transfer(([(self_address, [(caller, 0, (computed_amount))])]))
+    end
+}

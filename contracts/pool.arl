@@ -1,0 +1,72 @@
+archetype pool(owner: address, token: address, token_id: nat)
+
+import "./interfaces/fa2.arl"
+
+constant DEFAULT_ADDRESS: address = KT1VMCj69PwwKK7aRLRPnWoYh4X1xQqk2Vm2
+
+variable lp_token: address = DEFAULT_ADDRESS
+variable lp_supply: nat = 0
+variable pending_amount: nat = 0
+variable pending_caller: address = DEFAULT_ADDRESS
+
+variable strategies: set<address> = make_set<address>([])
+
+entry set_lp(lp: address) {
+    called by owner
+    effect {
+        lp_token := lp
+    }
+}
+
+entry continue_deposit(vault_balance: nat) {
+    called by token
+    effect {
+        var amount = pending_amount;
+        var depositor = pending_caller;
+        pending_amount := 0;
+        pending_caller := self_address;
+        var shares_to_mint ?= int_to_nat(floor((amount * lp_supply) / vault_balance));
+        transfer 0tz to entry fa2_multi(token).%transfer([(depositor, [(self_address, token_id, amount)])]);
+        transfer 0tz to entry fa2_multi(lp_token).mint((depositor, 0,  shares_to_mint));
+        lp_supply += shares_to_mint
+    }
+}
+
+entry deposit(amount: nat) {
+    pending_amount := amount;
+    pending_caller := caller;
+    transfer 0tz to token call balance_of<(list<(address * nat)> * contract<(nat)>)>(([(self_address, token_id)], self.continue_deposit))
+}
+
+entry continue_withdraw(vault_balance: nat) {
+    called by token
+    effect {
+        var shares_to_burn = pending_amount;
+        var withdrawer = pending_caller;
+        pending_amount := 0;
+        pending_caller := self_address;
+        var amount_to_withdraw ?= int_to_nat(floor((shares_to_burn * vault_balance) / lp_supply));
+        transfer 0tz to entry fa2_multi(token).%transfer([(self_address, [(withdrawer, token_id, amount_to_withdraw)])]);
+        transfer 0tz to entry fa2_multi(lp_token).%transfer([(withdrawer, [(self_address, 0, shares_to_burn)])]);
+        transfer 0tz to entry fa2_multi(lp_token).burn((0, shares_to_burn));
+        lp_supply -= shares_to_burn
+    }
+}
+
+entry withdraw(amount: nat) {
+    pending_amount := amount;
+    pending_caller := caller;
+    transfer 0tz to token call balance_of<(list<(address * nat)> * contract<(nat)>)>(([(self_address, token_id)], self.continue_deposit))
+}
+
+entry utilize(amount: nat) {
+    do_require(strategies.contains(caller),"INVALID CALLER");
+    transfer 0tz to entry fa2_multi(token).%transfer(([(self_address, [(caller, token_id, amount)])]))
+}
+
+entry add_strat(new_strat: address) {
+    called by owner
+    effect {
+        strategies.add(new_strat);
+    }
+}
