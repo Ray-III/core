@@ -10,7 +10,7 @@ Instructions
 - swap_usdt_to_wrap_xtz(2*amount, start_address)
 - deposit_result_xtz_to_youves(start_address)
 - borrow(amount)
-- transfert_usdt_to_reserve(amount)
+- swap_and_transfert_uusd_to_usdt(amount, pool_address)
 
 ### Close strategy (by user)
 
